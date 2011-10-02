@@ -20,18 +20,18 @@ module WikiPermissions
   end
 
   module MixinWikiPage
-    def self.included base
+    def self.included(base)
 
       base.class_eval do
         has_many :permissions, :class_name => 'WikiPageUserPermission'
         after_create :role_creator
       end
 
-      def leveled_permissions level
+      def leveled_permissions(level)
         WikiPageUserPermission.all :conditions => { :wiki_page_id => id, :level => level }
       end
 
-      def users_by_level level
+      def users_by_level(level)
         users = Array.new
         leveled_permissions(level).each do |permission|
           users << permission.user
@@ -73,7 +73,7 @@ module WikiPermissions
   end
 
   module MixinMember
-    def self.included base
+    def self.included(base)
       base.class_eval do
         has_many :wiki_page_user_permissions
       end
@@ -81,12 +81,12 @@ module WikiPermissions
   end
 
   module MixinUser
-    def self.included base
+    def self.included(base)
       base.class_eval do
 
         alias_method :_allowed_to?, :allowed_to? unless method_defined? :_allowed_to?
 
-        def not_has_permission? page
+        def not_has_permission?(page)
           admin or
           WikiPageUserPermission.first(
             :conditions => {
@@ -96,7 +96,7 @@ module WikiPermissions
           ) == nil
         end
 
-        def user_permission_greater? page, level
+        def user_permission_greater?(page, level)
           admin or (
           as_member = Member.first(
             :conditions => { :user_id => id, :project_id => page.project.id }
@@ -109,19 +109,19 @@ module WikiPermissions
           ).level >= level)
         end
 
-        def can_edit? page
+        def can_edit?(page)
           user_permission_greater? page, 2
         end
 
-        def can_edit_permissions? page
+        def can_edit_permissions?(page)
           user_permission_greater? page, 3
         end
 
-        def can_view? page
+        def can_view?(page)
           user_permission_greater? page, 1
         end
 
-        def allowed_to?(action, project, options={})
+        def allowed_to?(action, project, options = {})
           allowed_actions = [
             'create_wiki_page_user_permissions',
             'destroy_wiki_page_user_permissions'
@@ -175,7 +175,7 @@ module WikiPermissions
   end
 
   module MixinWikiController
-    def self.included base
+    def self.included(base)
       base.class_eval do
 
         helper_method :include_module_wiki_permissions?
@@ -216,7 +216,7 @@ module WikiPermissions
           render :template => 'wiki/show'
         end
 
-        def authorize ctrl = params[:controller], action = params[:action]
+        def authorize(ctrl = params[:controller], action = params[:action])
           allowed = User.current.allowed_to?({ :controller => ctrl, :action => action }, @project, { :params => params })
           allowed ? true : deny_access
         end
@@ -267,9 +267,9 @@ require 'dispatcher'
       require_dependency 'application_controller'
     end
 
-  Member.send :include, WikiPermissions::MixinMember
-  WikiPage.send :include, WikiPermissions::MixinWikiPage
-  WikiController.send :include, WikiPermissions::MixinWikiController
-  SearchController.send :include, WikiPermissions::MixinSearchController
-  User.send :include, WikiPermissions::MixinUser
+  Member.send(:include, WikiPermissions::MixinMember)
+  WikiPage.send(:include, WikiPermissions::MixinWikiPage)
+  WikiController.send(:include, WikiPermissions::MixinWikiController)
+  SearchController.send(:include, WikiPermissions::MixinSearchController)
+  User.send(:include, WikiPermissions::MixinUser)
 end
