@@ -1,24 +1,4 @@
 module WikiPermissions
-  module MixinSearchController
-    def self.included base
-      base.class_eval do
-        alias_method :_index, :index unless method_defined? :_index
-
-        def index
-          _index
-
-          if @results != nil
-            @results.delete_if do |result|
-              result.class == WikiPage and
-              not User.current.can_view? result
-            end
-          end
-        end
-
-      end
-    end
-  end
-
   module MixinWikiPage
     def self.included(base)
 
@@ -167,5 +147,4 @@ require 'dispatcher'
 
   WikiPage.send(:include, WikiPermissions::MixinWikiPage)
   WikiController.send(:include, WikiPermissions::MixinWikiController)
-  SearchController.send(:include, WikiPermissions::MixinSearchController)
 end
