@@ -72,14 +72,6 @@ module WikiPermissions
     end
   end
 
-  module MixinMember
-    def self.included(base)
-      base.class_eval do
-        has_many :wiki_page_user_permissions
-      end
-    end
-  end
-
   module MixinUser
     def self.included(base)
       base.class_eval do
@@ -267,7 +259,6 @@ require 'dispatcher'
       require_dependency 'application_controller'
     end
 
-  Member.send(:include, WikiPermissions::MixinMember)
   WikiPage.send(:include, WikiPermissions::MixinWikiPage)
   WikiController.send(:include, WikiPermissions::MixinWikiController)
   SearchController.send(:include, WikiPermissions::MixinSearchController)
