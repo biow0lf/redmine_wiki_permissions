@@ -1,7 +1,7 @@
 require_dependency 'search_controller'
 
 module SearchControllerPatch
-  def self.included base
+  def self.included(base)
     base.class_eval do
       alias_method :_index, :index unless method_defined? :_index
 
@@ -10,8 +10,7 @@ module SearchControllerPatch
 
         if @results != nil
           @results.delete_if do |result|
-            result.class == WikiPage and
-            not User.current.can_view? result
+            result.class == WikiPage && !User.current.can_view?(result)
           end
         end
       end
